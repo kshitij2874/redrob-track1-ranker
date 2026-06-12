@@ -1,0 +1,101 @@
+{
+  "_comment": "Structured rubric distilled from job_description.docx (Senior AI Engineer, Founding Team, Redrob AI). Used by features.py and rank.py to score candidates.jsonl. Plain-English JD requirements were translated into checkable signals over candidate_schema.json fields.",
+
+  "role_title": "Senior AI Engineer - Founding Team",
+
+  "experience_band": {
+    "ideal_min": 6,
+    "ideal_max": 8,
+    "acceptable_min": 5,
+    "acceptable_max": 9,
+    "_comment": "JD: '5-9 years... ideal candidate ~6-8'. Soft falloff outside acceptable range, never a hard cutoff -- 'we'll seriously consider candidates outside the band if other signals are strong'."
+  },
+
+  "title_relevance": {
+    "high": [
+      "Senior AI Engineer", "Lead AI Engineer", "AI Engineer", "AI Research Engineer",
+      "Senior Machine Learning Engineer", "Staff Machine Learning Engineer", "Machine Learning Engineer", "ML Engineer",
+      "Applied ML Engineer", "Senior Applied Scientist", "Search Engineer", "Senior NLP Engineer", "NLP Engineer",
+      "Recommendation Systems Engineer", "Senior Data Scientist"
+    ],
+    "medium": [
+      "Data Scientist", "Junior ML Engineer", "AI Specialist", "Senior Software Engineer (ML)", "Applied Scientist", "Research Scientist"
+    ],
+    "_comment": "Title match is ONE signal, not a filter -- JD explicitly says a 'Tier 5' candidate without an AI title but with relevant production career history (caught via semantic similarity over career_history descriptions) must also score well."
+  },
+
+  "skills": {
+    "required_embeddings_retrieval": [
+      "Embeddings", "Sentence Transformers", "Vector Representations", "Vector Search", "Semantic Search", "Hugging Face Transformers"
+    ],
+    "required_vector_db_hybrid_search": [
+      "Pinecone", "Weaviate", "Qdrant", "Milvus", "pgvector", "OpenSearch", "Elasticsearch", "FAISS",
+      "BM25", "Search & Discovery", "Search Backend", "Hybrid Search", "Information Retrieval", "Information Retrieval Systems"
+    ],
+    "required_python": ["Python"],
+    "required_eval_frameworks": [
+      "NDCG", "MRR", "MAP", "A/B Testing", "Learning to Rank", "Ranking Systems", "Offline Evaluation"
+    ],
+    "nice_to_have_llm_finetuning": ["LoRA", "QLoRA", "PEFT", "Fine-tuning LLMs"],
+    "nice_to_have_recommendation_nlp": ["Recommendation Systems", "RAG", "NLP", "LLMs"],
+    "nice_to_have_distributed_systems": ["Kafka", "Spark", "Kubernetes", "Airflow", "Distributed Systems", "Docker"],
+    "weak_signal_only": ["LangChain", "Prompt Engineering"],
+    "_comment_weak_signal": "JD: 'AI experience consisting primarily of recent (<12mo) LangChain-calls-OpenAI projects' is a soft red flag UNLESS backed by older/deeper IR or ML skills.",
+
+    "anti_stuffing": {
+      "min_endorsements_for_full_credit": 3,
+      "min_duration_months_for_full_credit": 12,
+      "assessment_score_verify_threshold": 60,
+      "assessment_verified_credit": 0.75,
+      "expert_claim_low_assessment_threshold": 35,
+      "_comment": "A skill listed with 0 endorsements and <=1 month duration counts at ~30% weight -- catches keyword-stuffer trap candidates whose skill list looks perfect but is unsubstantiated.",
+      "_comment_assessment": "redrob_signals.skill_assessment_scores gives a 0-100 platform-administered test score per skill (~25% of candidates have 1-2 scored skills, observed avg ~53). A skill with neither endorsements nor tenure but an assessment score >= 60 is upgraded from 30% to 75% credit -- a keyword-stuffer cannot fake a proctored test, and this specifically helps genuine 'Tier 5 plain-language' candidates whose real competency hasn't yet accrued endorsements/duration on the platform. An 'expert'-claimed skill with an assessment score < 35 is surfaced as corroborating detail in honeypot reasoning (not an independent trigger, to avoid false positives from one noisy test)."
+    }
+  },
+
+  "disqualifier_industries": {
+    "pure_consulting_firms_proxy": ["IT Services"],
+    "_comment_consulting": "JD: reject candidates whose ENTIRE career has been at consulting-style firms (proxy: every career_history entry has industry=='IT Services'). A candidate currently at such a firm but with prior product-company experience is fine.",
+    "research_only_proxy": ["Research", "Academia"],
+    "cv_speech_robotics_proxy_industries": ["Computer Vision", "Robotics", "Speech Technology"],
+    "cv_speech_robotics_proxy_skills": ["Computer Vision", "Image Classification", "Object Detection", "Speech Recognition", "Robotics", "SLAM", "Audio Processing"]
+  },
+
+  "seniority_escalation_titles": [
+    "Junior", "Associate", "Engineer", "Senior", "Staff", "Principal", "Lead", "Director", "VP", "Head"
+  ],
+
+  "architecture_only_titles": ["Architect", "Engineering Manager", "Director", "VP", "Head of", "CTO"],
+
+  "location": {
+    "target_cities": ["Pune", "Noida", "Hyderabad", "Mumbai", "Delhi", "Gurgaon", "Bangalore", "Bengaluru"],
+    "_comment": "JD: Pune/Noida preferred; Hyderabad, Pune, Mumbai, Delhi NCR 'welcome to apply'. Bangalore/Bengaluru added as a major Indian tech hub consistent with 'Tier-1 Indian cities'.",
+    "india_other_score": 0.55,
+    "target_city_score": 1.0,
+    "outside_india_base_score": 0.25,
+    "outside_india_relocate_bonus": 0.35,
+    "_comment_outside": "JD: 'Outside India: case-by-case, but we don't sponsor work visas.' Heavily down-weighted unless willing_to_relocate."
+  },
+
+  "notice_period": {
+    "ideal_max_days": 30,
+    "acceptable_max_days": 60,
+    "_comment": "JD: 'sub-30-day notice' loved, can buy out up to 30 days (so <=60 effectively coverable), '30+ day notice candidates still in scope but bar gets higher'."
+  },
+
+  "behavioral_signals": {
+    "_comment": "JD final note: 'a perfect-on-paper candidate who hasn't logged in for 6 months and has a 5% recruiter response rate is, for hiring purposes, not actually available. Down-weight them appropriately.' Implemented as a multiplier in [behavioral.min_multiplier, behavioral.max_multiplier].",
+    "reference_date": "2026-06-12",
+    "stale_after_days": 60,
+    "very_stale_after_days": 180,
+    "min_multiplier": 0.55,
+    "max_multiplier": 1.12
+  },
+
+  "honeypot_heuristics": {
+    "expert_zero_evidence_skill_threshold": 3,
+    "yoe_overstate_ratio": 1.6,
+    "yoe_overstate_min_gap_years": 3,
+    "_comment": "Profiles with >=3 'expert' skills that have 0 endorsements AND 0 duration_months, OR whose summed career_history duration wildly exceeds stated years_of_experience, are flagged as honeypot-suspects and forced to near-zero score."
+  }
+}

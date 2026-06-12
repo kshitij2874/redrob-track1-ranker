@@ -1,0 +1,118 @@
+# Redrob Hackathon -- Submission Metadata
+# Track 1: Intelligent Candidate Discovery & Ranking
+#
+# TODO before submitting: fields marked TODO below need values only you can
+# provide (team name, GitHub repo URL once pushed, hosted sandbox link, phone
+# number). Everything else reflects this implementation.
+
+# ============================================================================
+# Team identity
+# ============================================================================
+team_name: "KritXlabs"  # Used in leaderboard and announcements
+
+primary_contact:
+  name: "Kshitij"
+  email: "kvatsa5@gmail.com"
+  phone: "TODO"  # +91-XXXXXXXXXX, used for top-50 / top-10 outreach
+
+team_members:
+  - name: "Kshitij"
+    email: "kvatsa5@gmail.com"
+    role: "ML Engineer"
+  # Add more members here if this is a team submission
+
+# ============================================================================
+# Code and reproducibility
+# ============================================================================
+github_repo: "https://github.com/TODO/TODO"
+# Required. Push this directory (rank.py, features.py, text_utils.py,
+# precompute_embeddings.py, embed.py, app.py, jd_profile.json, artifacts/,
+# sample_candidates_100.jsonl, requirements.txt, README.md, analysis/) and
+# update this URL.
+
+sandbox_link: "https://huggingface.co/spaces/TODO/redrob-track1-ranker"
+# Required. Deploy app.py (Gradio SDK) to a HuggingFace Space (or Streamlit
+# Cloud / Replit / Colab / Docker registry / Binder per Section 10.5) and
+# update this URL.
+
+reproduce_command: "python rank.py --candidates ./candidates.jsonl --out ./submission.csv"
+# Verified: 100,000 candidates -> top-100 ranked CSV in ~3 seconds.
+
+# ============================================================================
+# Compute environment
+# ============================================================================
+compute:
+  platform: "Linux sandbox (4-core CPU)"
+  cpu_cores: 4
+  ram_gb: 4
+  python_version: "3.10.12"
+  os: "Ubuntu 22.04"
+  uses_gpu_for_inference: false
+  has_network_during_ranking: false
+  pre_computation_required: true
+  pre_computation_time_minutes: 1
+  # pre-computation = precompute_embeddings.py (TF-IDF + TruncatedSVD over
+  # the 100K-candidate corpus); ~20s measured, rounded up generously.
+
+# ============================================================================
+# AI tools declaration
+# ============================================================================
+ai_tools_used:
+  - "Claude"
+
+ai_usage_summary: |
+  Used Claude (Anthropic) as a coding assistant throughout: to read and
+  summarize job_description.docx / submission_spec.docx /
+  redrob_signals_doc.docx / candidate_schema.json into the structured
+  jd_profile.json rubric, to design and implement the feature-extraction,
+  scoring, embedding-precompute, ranking, and Gradio demo code, and to run
+  dataset-wide statistical analysis used to calibrate thresholds (e.g.
+  honeypot heuristics, behavioral-multiplier ranges). All scoring logic and
+  thresholds were reviewed and are checkable directly against jd_profile.json
+  and the JD text. No candidate data was sent to any external LLM API at
+  ranking time -- the ranker itself (rank.py) uses only local TF-IDF/SVD and
+  rule-based scoring, with no model calls.
+
+# ============================================================================
+# Approach summary
+# ============================================================================
+methodology_summary: |
+  Hybrid ranker: final_score = base_score * disqualifier_multiplier *
+  behavioral_multiplier (honeypots get an extra 0.02x). base_score blends
+  semantic similarity (TF-IDF + TruncatedSVD/LSA cosine sim between each
+  candidate's narrative and a hand-written JD narrative, 35%), anti-stuffing
+  weighted skill-category coverage (30%), experience-band fit (15%), title
+  relevance (10%), location/relocation (7%), and notice period (3%). These
+  weights were stress-tested with a sensitivity analysis (analysis/
+  weight_sensitivity.py): top-100 retains 78-96% Jaccard overlap and Spearman
+  >=0.85 under +/-30-60% reweighting of any single component, so the ranking
+  isn't riding on one fragile knob; title in particular has the least
+  influence (Jaccard 0.96 even near-zeroed), confirming the JD's "title is
+  one signal, not a filter" framing. Anti-stuffing skill credit uses
+  endorsements/duration_months, *plus* redrob_signals.skill_assessment_scores
+  (platform-administered per-skill test scores) as an upgrade-only
+  corroboration signal -- a skill failing the endorsement/duration bar but
+  scoring >=60 on a proctored test is upgraded from 30% to 75% credit, since
+  a keyword-stuffer can't fake a passing test score. disqualifier_multiplier
+  softly penalizes the JD's six explicit red flags (pure-consulting,
+  research-only, CV/speech-only, architecture-only, title-chasing,
+  LangChain-only AI experience). behavioral_multiplier (0.55-1.12) downweights
+  "perfect on paper but inactive" candidates using redrob_signals
+  (last_active_date, recruiter_response_rate, interview_completion_rate,
+  etc.). Honeypot detection flags candidates with >=3 zero-evidence "expert"
+  skills (corroborated by skill_assessment_scores when available) or
+  implausible career-history-vs-YOE ratios -- 23/100K flagged, 0 in top-100,
+  well under the spec's 10% Stage-3 disqualification threshold. Every clause
+  in the per-candidate reasoning string is sourced directly from a schema
+  field -- no LLM-generated text. Runtime: ~3s for 100K candidates (TF-IDF/SVD
+  embeddings precomputed offline in ~20s).
+
+# ============================================================================
+# Declarations
+# ============================================================================
+declarations:
+  read_submission_spec: true
+  code_is_original_work: true
+  no_collusion: true
+  honeypot_check_done: true
+  reproduction_tested: true

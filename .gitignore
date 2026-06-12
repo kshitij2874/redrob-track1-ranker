@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+precompute.log
+
+# Stray exploration scripts / scratch files from development, not part of
+# the documented submission (see README.md "Repo structure").
+explore.py
+explore2.py
+explore3.py
+team_redrob.csv
