@@ -10,17 +10,15 @@ Per submission_spec.docx Section 10.5, this sandbox:
     (a 100-candidate run takes well under 5 seconds)
 
 It reuses the *exact same* scoring code as rank.py (score_candidate,
-generate_reasoning, jd_profile.json) -- the only difference is that
-embeddings for the uploaded candidates are computed on the fly with the
-saved TF-IDF + TruncatedSVD models (embed.py) instead of being looked up from
-the precomputed full-100K-corpus artifacts/candidate_embeddings.npz.
+generate_reasoning, jd_profile.json) -- embeddings are computed on the fly by
+fitting a TF-IDF + TruncatedSVD model from the bundled 100-candidate sample at
+startup (no pre-built binary artifacts required for the Space).
 
 Run locally:
     python app.py
 Deploy: push this file + jd_profile.json + features.py + text_utils.py +
-embed.py + rank.py + artifacts/{vectorizer.joblib,svd.joblib} +
-sample_candidates_100.jsonl + requirements.txt to a HuggingFace Space
-(SDK: gradio).
+embed.py + rank.py + sample_candidates_100.jsonl + requirements.txt to a
+HuggingFace Space (SDK: gradio). No artifacts/ directory needed.
 """
 
 from __future__ import annotations
@@ -31,21 +29,21 @@ import tempfile
 from datetime import date
 
 import gradio as gr
+import numpy as np
+from sklearn.decomposition import TruncatedSVD
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.preprocessing import normalize
 
-from embed import embed_candidates, jd_embedding, load_models
+from embed import embed_candidates, jd_embedding
 from rank import generate_reasoning, score_candidate
-from text_utils import jd_core_text  # noqa: F401 (documentation parity)
+from text_utils import candidate_narrative_text, jd_core_text
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-ARTIFACTS_DIR = os.path.join(HERE, "artifacts")
 SAMPLE_PATH = os.path.join(HERE, "sample_candidates_100.jsonl")
 
 with open(os.path.join(HERE, "jd_profile.json"), "r", encoding="utf-8") as f:
     JD_PROFILE = json.load(f)
 REFERENCE_DATE = date.fromisoformat(JD_PROFILE["behavioral_signals"]["reference_date"])
-
-VECTORIZER, SVD = load_models(ARTIFACTS_DIR)
-JD_EMB = jd_embedding(VECTORIZER, SVD)
 
 
 def _load_jsonl(path_or_file) -> list[dict]:
@@ -56,6 +54,22 @@ def _load_jsonl(path_or_file) -> list[dict]:
             if line:
                 candidates.append(json.loads(line))
     return candidates
+
+
+def _build_models():
+    """Fit TF-IDF + TruncatedSVD from the bundled sample at startup."""
+    candidates = _load_jsonl(SAMPLE_PATH)
+    texts = [candidate_narrative_text(c) for c in candidates] + [jd_core_text()]
+    vectorizer = TfidfVectorizer(max_features=8000, sublinear_tf=True, min_df=1)
+    matrix = vectorizer.fit_transform(texts)
+    n_components = min(100, len(texts) - 1)
+    svd = TruncatedSVD(n_components=n_components, random_state=42)
+    svd.fit(matrix)
+    return vectorizer, svd
+
+
+VECTORIZER, SVD = _build_models()
+JD_EMB = jd_embedding(VECTORIZER, SVD)
 
 
 def run_ranking(uploaded_file):

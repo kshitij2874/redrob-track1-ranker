@@ -13,7 +13,7 @@ team_name: "KritXlabs"  # Used in leaderboard and announcements
 primary_contact:
   name: "Kshitij"
   email: "kvatsa5@gmail.com"
-  phone: "TODO"  # +91-XXXXXXXXXX, used for top-50 / top-10 outreach
+  phone: "+91-8521682874"
 
 team_members:
   - name: "Kshitij"
@@ -30,7 +30,7 @@ github_repo: "https://github.com/kshitij2874/redrob-track1-ranker"
 # sample_candidates_100.jsonl, requirements.txt, README.md, analysis/) and
 # update this URL.
 
-sandbox_link: "https://huggingface.co/spaces/TODO/redrob-track1-ranker"
+sandbox_link: "https://huggingface.co/spaces/kvatsa5/redrob-track1-ranker"
 # Required. Deploy app.py (Gradio SDK) to a HuggingFace Space (or Streamlit
 # Cloud / Replit / Colab / Docker registry / Binder per Section 10.5) and
 # update this URL.
