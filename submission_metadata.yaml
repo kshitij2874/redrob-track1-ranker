@@ -24,7 +24,7 @@ team_members:
 # ============================================================================
 # Code and reproducibility
 # ============================================================================
-github_repo: "https://github.com/TODO/TODO"
+github_repo: "https://github.com/kshitij2874/redrob-track1-ranker"
 # Required. Push this directory (rank.py, features.py, text_utils.py,
 # precompute_embeddings.py, embed.py, app.py, jd_profile.json, artifacts/,
 # sample_candidates_100.jsonl, requirements.txt, README.md, analysis/) and
